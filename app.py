@@ -26,6 +26,8 @@ class AppFeatures(BaseModel):
     def __init__(self): # since the parent has a constructor. I will have to set an explicit constructor
         super().__init__()
         self.database = db.MongoDB()
+        self.current_user = None
+
 
     def get_database(self):
         return self.__database
@@ -75,6 +77,7 @@ class AppFeatures(BaseModel):
     def __login(self):
         email = input("Enter your email: ")
         user = self.database.find_user({"email": email})
+        self.current_user = user
         if user:
             print("User exist")
             password = input("Enter your password: ")
@@ -117,6 +120,7 @@ class AppFeatures(BaseModel):
         # inserting the log to the database
         self.database.insert_sentiment_log(
                 {
+                    "user_id": self.current_user["_id"],
                     "ask":user_text,
                     "relpy":result
                 
@@ -133,6 +137,7 @@ class AppFeatures(BaseModel):
         result = response.text
         self.database.insert_translation(
             {
+                "user_id": self.current_user["_id"],
                 "ask":user_text,
                 "reply":result
             }
@@ -142,13 +147,6 @@ class AppFeatures(BaseModel):
        
 app = AppFeatures()
 app.first_menu()
-
-
-#testing
-
-
-#all_record = app.database.find_all_users()
-#print(app.database.find_user({"email": "rahbi@gmail.com"}))
 
 
 

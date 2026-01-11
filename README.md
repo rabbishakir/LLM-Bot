@@ -1,18 +1,32 @@
 # Gemini CLI App (Sentiment Analysis & Translation)
 
-This is a Python-based **command-line application** that uses the **Google Gemini API** to perform:
+This is a Python-based **command-line application** that uses the **Google Gemini API** and **MongoDB Atlas** to provide:
 
 * User registration and login
-* Sentiment analysis of text
+* Sentiment analysis
 * Language detection and translation
+* Persistent user activity logs (per user)
 
-The project is designed for learning and demonstrates:
+The application is intentionally built as a  **CLI-first backend project** , focusing on:
 
-* Conda environment management
-* Environment variables using `.env`
-* Object-oriented programming with inheritance
-* External API integration (Google Gemini)
-* CLI-based application flow
+* Data persistence
+* State management
+* Backend design thinking
+* Clean separation of responsibilities
+
+---
+
+## Project Status (Current)
+
+✅ Completed
+
+* MongoDB integration (Atlas)
+* User registration & login using database
+* Duplicate email prevention
+* Sentiment analysis with Gemini API
+* Translation with Gemini API
+* Storing sentiment & translation logs
+* Logs linked to the logged-in user
 
 ---
 
@@ -21,7 +35,8 @@ The project is designed for learning and demonstrates:
 ```
 project-root/
 │
-├── app.py                 # Main application file
+├── app.py                 # Main application logic (menus, flow)
+├── database.py            # MongoDB connection and CRUD operations
 ├── .env                   # Environment variables (not committed)
 ├── .env.example           # Sample env file
 ├── requirements.txt       # Python dependencies
@@ -32,21 +47,20 @@ project-root/
 
 ## Prerequisites
 
-* Anaconda or Miniconda installed
+* Anaconda / Miniconda
 * Python 3.9+
+* MongoDB Atlas cluster
 * Google Gemini API key
 
 ---
 
 ## Step 1: Create Conda Environment
 
-Create a new conda environment:
-
 ```bash
 conda create -n gemini-app python=3.10
 ```
 
-List all conda environments:
+List environments:
 
 ```bash
 conda env list
@@ -54,60 +68,48 @@ conda env list
 
 ---
 
-## Step 2: Activate Conda Environment
+## Step 2: Activate Environment
 
 ```bash
 conda activate gemini-app
 ```
 
-You should now see:
+---
+
+## Step 3: Environment Variables
+
+Create a `.env` file in the project root:
 
 ```
-(gemini-app)
+GEMINI_API_KEY=your_gemini_api_key
+DB_NAME=geminiBotDB
+DB_USER=your_mongodb_username
+DB_PASSWORD=your_mongodb_password
 ```
+
+> ⚠️ Do not commit `.env` to version control
 
 ---
 
-## Step 3: Create `.env` File
+## Step 4: Install Dependencies
 
-Create a file named `.env` in the project root:
-
-```
-GEMINI_API_KEY=your_gemini_api_key_here
-```
-
-Do **not** use quotes around the key.
-
-Create a reference file:
-
-**.env.example**
-
-```
-GEMINI_API_KEY=your_api_key_here
-```
-
----
-
-## Step 4: Create `requirements.txt`
+`requirements.txt`
 
 ```
 google-generativeai
 python-dotenv
+pymongo
 ```
 
----
-
-## Step 5: Install Dependencies
+Install:
 
 ```bash
-pymongo
-pandas
 pip install -r requirements.txt
 ```
 
 ---
 
-## Step 6: Run the Application
+## Step 5: Run the Application
 
 ```bash
 python app.py
@@ -117,71 +119,81 @@ python app.py
 
 ## Application Flow
 
-1. User selects:
-   * Registration
-   * Login
-   * Exit
-2. After login, user can:
-   * Perform sentiment analysis
-   * Translate text into another language
-3. Google Gemini processes the request using the API key from `.env`
+1. User registers or logs in
+2. Logged-in user becomes the **current session user**
+3. User performs:
+   * Sentiment analysis
+   * Translation
+4. Each action:
+   * Produces Gemini output
+   * Is stored in MongoDB
+   * Is linked to the logged-in user
+5. User can view personal activity history
 
 ---
 
-## Environment Variables
+## Database Design (Conceptual)
 
-| Variable Name  | Description           |
-| -------------- | --------------------- |
-| GEMINI_API_KEY | Google Gemini API key |
-| MongoDB Pass   | FreshImpact69@#       |
-| MongoDB User   | rabbishakir           |
+### Users Collection
+
+```json
+{
+  "_id": ObjectId,
+  "name": "string",
+  "email": "string",
+  "password": "hashed_string"
+}
+```
+
+### Sentiment Logs Collection
+
+```json
+{
+  "_id": ObjectId,
+  "user_id": ObjectId,
+  "ask": "string",
+  "reply": "string",
+  "created_at": "datetime"
+}
+```
+
+### Translation Logs Collection
+
+```json
+{
+  "_id": ObjectId,
+  "user_id": ObjectId,
+  "ask": "string",
+  "reply": "string",
+  "created_at": "datetime"
+}
+```
 
 ---
 
-## MongoDB Atlas (Cloud) – Placeholder
+## Design Principles Used
 
-Currently, user data is stored **in memory** using a Python dictionary.
-
-You can later connect **MongoDB Atlas** for persistent storage.
-
-mongodb+srv://rabbishakir:<db_password>@gemini-bot-0.mv8vq6l.mongodb.net/?appName=gemini-bot-0
-
-### Planned Integration
-
-```python
-# TODO: MongoDB Atlas connection
-# from pymongo import MongoClient
-# client = MongoClient(MONGO_URI)
-# db = client["gemini_app"]
-# users = db["users"]
-```
-
-Add this later to `.env`:
-
-```
-MONGO_URI=your_mongodb_connection_string
-```
+* CLI-first development
+* No frontend or API until backend logic is clear
+* MongoDB as persistent source of truth
+* App-level state for current user
+* Database-level storage for history
 
 ---
 
 ## Security Notes
 
-* Do not commit `.env` files
-* Add `.env` to `.gitignore`
-* Never expose API keys
+* Password hashing is implemented using bcrypt
 
----
+## Future Enhancements (Optional)
 
-## Future Enhancements
-
-* MongoDB integration
-* Password hashing
-* Logout feature
-* Improved error handling
-* Logging
+* Add timestamps and indexing
+* Add API layer (FastAPI)
+* Add frontend UI
+* Role-based access
 
 ---
 
 ## License
 
-This project is intended for learning and practice purposes.
+Educational / learning purpose only
